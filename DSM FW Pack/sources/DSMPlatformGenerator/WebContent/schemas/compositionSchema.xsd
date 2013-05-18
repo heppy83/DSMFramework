@@ -1,0 +1,576 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	targetNamespace="http://www.example.org/CustomMashupPlatform/composition"
+	xmlns:tns="http://www.example.org/CustomMashupPlatform/composition"
+	elementFormDefault="qualified">
+
+	<xs:element name="mashup" fragmentId="BASE">
+		<xs:complexType>
+			<xs:choice minOccurs="1" maxOccurs="unbounded">
+				
+				<xs:element name="component" minOccurs="1" maxOccurs="unbounded"  type="tns:componentType" />
+	
+				<xs:element name="page" minOccurs="0" maxOccurs="0"  type="tns:pageType" fragmentId="pageDef" setId="setPageNumber"/>
+	
+				<xs:element name="userRole" minOccurs="1" maxOccurs="unbounded"  type="tns:userRoleType" fragmentId="userRoleDef"/>
+	
+				<xs:element name="globalVariable" minOccurs="0" maxOccurs="unbounded"  type="tns:globalVariableType" fragmentId="globalVariableDef"/>
+	
+				<xs:element name="constant" minOccurs="0" maxOccurs="unbounded"  type="tns:constantType" fragmentId="constantDef"/>
+	
+				<xs:element name="dfConnector" minOccurs="0" maxOccurs="unbounded"  type="tns:dfConnectorType" fragmentId="dfConnectorDef"/>
+		
+				<xs:element name="cfConnector" minOccurs="0" maxOccurs="unbounded"  type="tns:cfConnectorType" fragmentId="cfConnectorDef"/>
+		
+				<xs:element name="split" minOccurs="0" maxOccurs="unbounded"  type="tns:splitType" fragmentId="splitDef"/>
+	
+				<xs:element name="join" minOccurs="0" maxOccurs="unbounded"  type="tns:joinType" fragmentId="joinDef"/>
+
+			</xs:choice>
+			
+			<xs:attribute name="name" type="xs:string" use="required" />
+			
+			<xs:attribute name="collaboration" use="required" fragmentId="collaborationAttribute">
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+				      <xs:enumeration value="no"/>
+				      <xs:enumeration value="anyUser" fragmentId="collaborationAnyUser"/>
+				      <xs:enumeration value="roleBasedAccess" fragmentId="collaborationroleBasedAccess"/>
+				    </xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>	
+			
+		</xs:complexType>
+		
+		<xs:unique name="noMergeForDfInputParameter" fragmentId="noMergeForDfInputParameter">
+			<xs:selector xpath="dfConnector/target_inputParameter"/>
+			<xs:field xpath="@ref"/>
+		</xs:unique>
+	
+		<xs:unique name="noMergeForDfGlobalVariableIn" fragmentId="noMergeForDfGlobalVariableIn">
+			<xs:selector xpath="dfConnector/target_globalVariable"/>
+			<xs:field xpath="@ref"/>
+		</xs:unique>
+
+		<xs:unique name="noBranchForDfOutputParameter" fragmentId="noBranchForDfOutputParameter">
+			<xs:selector xpath="dfConnector/source_outputParameter"/>
+			<xs:field xpath="@ref"/>
+		</xs:unique>
+	
+		<xs:unique name="noBranchForDfGlobalVariableOut" fragmentId="noBranchForDfGlobalVariableOut">
+			<xs:selector xpath="dfConnector/source_globalVariable"/>
+			<xs:field xpath="@ref"/>
+		</xs:unique>
+		
+		<xs:unique name="noBranchForCfSource" fragmentId="noBranchForCfSource">
+			<xs:selector xpath="cfConnector/source_operation"/>
+			<xs:field xpath="@ref"/>
+		</xs:unique>
+	
+		<xs:unique name="noMergeForCfTarget" fragmentId="noMergeForCfTarget">
+			<xs:selector xpath="cfConnector/target_operation"/>
+			<xs:field xpath="@ref"/>
+		</xs:unique>
+		
+<!-- ================================== Keys definitions ============================================ -->
+		
+		<xs:key name="componentKey">
+			<xs:selector xpath="component" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="dataTypeKey">
+			<xs:selector xpath="dataType" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="configurationParameterKey">
+			<xs:selector xpath="component/configurationParameter" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="operationKey">
+			<xs:selector xpath="component/operation" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="inputParameterKey">
+			<xs:selector xpath="component/operation/inputParameter" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="outputParameterKey">
+			<xs:selector xpath="component/operation/outputParameter" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="userRoleKey">
+			<xs:selector xpath="userRole" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="pageKey">
+			<xs:selector xpath="page" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="viewportKey">
+			<xs:selector xpath="page/viewport" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="globalVariableKey">
+			<xs:selector xpath="globalVariable" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="constantKey">
+			<xs:selector xpath="constant" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="dfConnectorKey">
+			<xs:selector xpath="dfConnector" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="cfConnectorKey">
+			<xs:selector xpath="cfConnector" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="joinKey">
+			<xs:selector xpath="join" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+		<xs:key name="splitKey">
+			<xs:selector xpath="split" />
+			<xs:field xpath="@id" />
+		</xs:key>
+		
+<!-- ================================== References definitions ============================================ -->
+		
+		<xs:keyref name="configurationParameter_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="configurationParameter/has_dataType" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="inputParameter_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="component/operation/inputParameter/has_dataType" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="outputParameter_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="component/operation/outputParameter/has_dataType" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="viewport_componentRef" refer="tns:componentKey">
+			<xs:selector xpath="page/viewport/displays_component" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="belongsTo_userRoleRef" refer="tns:userRoleKey">
+			<xs:selector xpath="page/belongsTo_userRole" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="globalVariable_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="globalVariable" />
+			<xs:field xpath="@dataType" />
+		</xs:keyref>
+		
+		<xs:keyref name="constant_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="constant/has_dataType" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="constant_configurationParameterRef" refer="tns:configurationParameterKey">
+			<xs:selector xpath="constant/feeds_configurationParameter" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="constant_inputParameterRef" refer="tns:inputParameterKey">
+			<xs:selector xpath="constant/feeds_inputParameter" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="dfConnector_outputParameterRef" refer="tns:outputParameterKey">
+			<xs:selector xpath="dfConnector/source_outputParameter" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="dfConnector_inputParameterRef" refer="tns:inputParameterKey">
+			<xs:selector xpath="dfConnector/target_inputParameter" />
+			<xs:field xpath="@ref" />
+		</xs:keyref> 
+		
+		<xs:keyref name="dfConnector_source-globalVariableRef" refer="tns:globalVariableKey">
+			<xs:selector xpath="dfConnector/source_globalVariable" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="dfConnector_target-globalVariableRef" refer="tns:globalVariableKey">
+			<xs:selector xpath="dfConnector/target_globalVariable" />
+			<xs:field xpath="@ref" />
+		</xs:keyref> 
+		
+		<xs:keyref name="cfConnector_sourceOperationRef" refer="tns:operationKey">
+			<xs:selector xpath="cfConnector/source_operation" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="cfConnector_targetOperationRef" refer="tns:operationKey">
+			<xs:selector xpath="cfConnector/target_operation" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="join_sourceOperationRef" refer="tns:operationKey">
+			<xs:selector xpath="join/source_operation" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="join_targetOperationRef" refer="tns:operationKey">
+			<xs:selector xpath="join/target_operation" />
+			<xs:field xpath="@target" />
+		</xs:keyref>
+		
+		<xs:keyref name="split_sourceOperationRef" refer="tns:operationKey">
+			<xs:selector xpath="split/source_operation" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+		<xs:keyref name="split_targetOperationRef" refer="tns:operationKey">
+			<xs:selector xpath="join/target_operation" />
+			<xs:field xpath="@ref" />
+		</xs:keyref>
+		
+	</xs:element>
+
+
+<!-- ================================== Types definitions ============================================ -->
+
+	<xs:complexType name="componentType" fragmentId="BASE">
+
+		<xs:choice minOccurs="1" maxOccurs="unbounded">
+
+			<xs:element name="dataType" minOccurs="0"
+				maxOccurs="unbounded">
+				<xs:complexType mixed="true">
+					<xs:attribute name="id" type="xs:string" use="required" />
+					<xs:attribute name="name" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="configurationParameter" minOccurs="0"
+				maxOccurs="unbounded" fragmentId="configurationParameterDef">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="has_dataType" minOccurs="1" maxOccurs="1" >
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>	
+			
+					<xs:attribute name="id" type="xs:string" use="required" />
+					<xs:attribute name="name" type="xs:string" use="required" />
+					<xs:attribute name="manualInput" use="optional" fixed="yes" />
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="operation" type="tns:operationType"
+				minOccurs="1" maxOccurs="0" fragmentId="operationDef" setId="setOperationPerComponent"/>
+
+		</xs:choice>
+
+		<xs:attribute name="id" type="xs:string" use="required" />
+		
+		<xs:attribute name="name" type="xs:string" use="required" />
+		
+		<xs:attribute name="endpoint" type="xs:string" use="required" />
+
+		<xs:attribute name="binding" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+			      <xs:enumeration value="rss" fragmentId="componentBindingRSS"/>
+			      <xs:enumeration value="atom" fragmentId="componentBindingAtom"/>
+			      <xs:enumeration value="rest" fragmentId="componentBindingREST"/>
+			      <xs:enumeration value="soap" fragmentId="componentBindingSOAP"/>
+			      <xs:enumeration value="javascript" fragmentId="componentBindingJavaScript"/>
+			      <xs:enumeration value="widget" fragmentId="componentBindingWidget"/>
+			    </xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+			      <xs:enumeration value="data" fragmentId="componentTypeData"/>
+			      <xs:enumeration value="service" fragmentId="componentTypeService"/>
+			      <xs:enumeration value="ui" fragmentId="componentTypeUI"/>
+			    </xs:restriction>
+		    </xs:simpleType>
+		</xs:attribute>
+		
+		<xs:attribute name="class" type="xs:string" use="required" />
+		
+		<xs:attribute name="supportReferencePassing" use="optional" default="no" fragmentId="supportReferencePassing">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+			      <xs:enumeration value="yes" />
+			      <xs:enumeration value="no" />
+			    </xs:restriction>
+		    </xs:simpleType>
+		</xs:attribute>
+		
+		<xs:attribute name="syntax" type="xs:string" use="optional" />
+
+	</xs:complexType>
+
+
+	<xs:complexType name="operationType" fragmentId="operationType">
+		<xs:sequence>
+			
+			<xs:element name="inputParameter" minOccurs="1" maxOccurs="0" fragmentId="inputParameterDef" setId="setInputParameterPerOperation">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="has_dataType" minOccurs="1" maxOccurs="1" >
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					
+					<xs:attribute name="id" type="xs:string" use="required" />
+					<xs:attribute name="name" type="xs:string" use="required" />
+
+					<xs:attribute name="optional" default="no" use="optional">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:pattern value="yes|no" />
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+
+					<xs:attribute name="manualInput" use="optional" fragmentId="manualInputAttribute">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:pattern value="yes|no" />
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>	
+
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element name="outputParameter" minOccurs="1" maxOccurs="0" fragmentId="outputParameterDef" setId="setOutputParameterPerOperation">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="has_dataType" minOccurs="1" maxOccurs="1" >
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					
+					<xs:attribute name="id" type="xs:string" use="required" />
+					<xs:attribute name="name" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+
+		</xs:sequence>
+
+		<xs:attribute name="id" type="xs:string" use="required" />
+		
+		<xs:attribute name="name" type="xs:string" use="required" />
+		
+		<xs:attribute name="reference" type="xs:string" use="required" />
+
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="request-response" fragmentId="request-responseOperationType"/>
+				    <xs:enumeration value="solicit-response" fragmentId="solicit-responseOperationType"/>
+				    <xs:enumeration value="one-way" fragmentId="one-wayOperationType"/>
+				    <xs:enumeration value="notification" fragmentId="notificationOperationType"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	
+	
+	<xs:complexType name="pageType" fragmentId="pageType">
+		<xs:sequence>
+			<xs:element name="viewport" minOccurs="1" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="displays_component" minOccurs="0" maxOccurs="1" >
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required" />
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					
+					<xs:attribute name="id" type="xs:string" use="required" />
+					<xs:attribute name="name" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		
+			<xs:element name="belongsTo_userRole" minOccurs="0" maxOccurs="unbounded" fragmentId="pageBelongsToUserRole">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="URL" type="xs:string" use="required" />
+	</xs:complexType>
+	
+	
+	<xs:complexType name="userRoleType" fragmentId="userRoleType">
+		<xs:attribute name="id" type="xs:string" use="required" />
+		<xs:attribute name="name" type="xs:string" use="required" />
+	</xs:complexType>
+	
+	<xs:complexType name="globalVariableType" fragmentId="globalVariableType">
+		<xs:sequence>
+			<xs:element name="has_dataType" minOccurs="1" maxOccurs="1" >
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="defaultValue" type="xs:string" use="optional" />
+	</xs:complexType>
+	
+	<xs:complexType name="constantType" fragmentId="constantType">
+		<xs:sequence>
+			<xs:element name="has_dataType" minOccurs="1" maxOccurs="1" >
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="feeds_inputParameter" minOccurs="0" maxOccurs="1" fragmentId="feedsInputParAttribute">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="feeds_configurationParameter" minOccurs="0" maxOccurs="1" fragmentId="feedsConfigurationParameterAttribute">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+		<xs:attribute name="name" type="xs:string" use="required" />
+		<xs:attribute name="value" type="xs:string" use="optional" />
+		
+	</xs:complexType>
+	
+	<xs:complexType name="dfConnectorType" fragmentId="dfConnectorType">
+		<xs:sequence>
+			<xs:element name="condition" minOccurs="0" maxOccurs="1" fragmentId="conditionForDf">
+				<xs:complexType mixed="true">
+					<xs:attribute name="language" type="xs:string" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="source_outputParameter" minOccurs="0" maxOccurs="1" fragmentId="dfSourceOutputParameter">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="source_globalVariable" minOccurs="0" maxOccurs="1" fragmentId="dfSourceGlobalVariable">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="target_inputParameter" minOccurs="0" maxOccurs="1" fragmentId="dfTargetInputParameter">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="target_globalVariable" minOccurs="0" maxOccurs="1" fragmentId="dfTargetGlobalVariable">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+	</xs:complexType>
+	
+	<xs:complexType name="cfConnectorType" fragmentId="cfConnectorType">
+		<xs:sequence>
+			<xs:element name="condition" minOccurs="0" maxOccurs="1" fragmentId="conditionForCf">
+				<xs:complexType mixed="true">
+					<xs:attribute name="language" type="xs:string" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="source_operation" minOccurs="1" maxOccurs="1">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="target_operation" minOccurs="1" maxOccurs="1">
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+	</xs:complexType>
+	
+	<xs:complexType name="joinType" fragmentId="joinType">
+		<xs:sequence>
+			<xs:element name="condition" minOccurs="0" maxOccurs="1" fragmentId="conditionForJoin">
+				<xs:complexType mixed="true">
+					<xs:attribute name="language" type="xs:string" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="source_operation" minOccurs="1" maxOccurs="unbounded" >
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="target_operation" minOccurs="1" maxOccurs="1" >
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+	</xs:complexType>
+	
+	<xs:complexType name="splitType" fragmentId="splitType">
+		<xs:sequence>
+			<xs:element name="condition" minOccurs="0" maxOccurs="1" fragmentId="conditionForSplit">
+				<xs:complexType mixed="true">
+					<xs:attribute name="language" type="xs:string" use="optional" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="source_operation" minOccurs="1" maxOccurs="1" >
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="target_operation" minOccurs="1" maxOccurs="unbounded" >
+				<xs:complexType>
+					<xs:attribute name="ref" type="xs:string" use="required" />
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		
+		<xs:attribute name="id" type="xs:string" use="required" />
+	</xs:complexType>
+			
+</xs:schema>

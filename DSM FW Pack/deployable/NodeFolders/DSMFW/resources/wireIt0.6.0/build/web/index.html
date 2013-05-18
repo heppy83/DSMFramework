@@ -1,0 +1,272 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>WireIt - WiringEditor</title>
+        <link rel="icon" href="../favicon.ico" type="image/png" />
+        <link rel="SHORTCUT ICON" href="./favicon.ico" type="image/png" />
+
+        <!-- YUI -->
+        <link rel="stylesheet" type="text/css" href="./lib/yui/reset-fonts-grids/reset-fonts-grids.css" />
+        <link rel="stylesheet" type="text/css" href="./lib/yui/assets/skins/sam/skin.css" />
+
+        <!-- InputEx CSS -->
+        <link type="text/css" rel="stylesheet" href="./plugins/inputex/lib/inputex/css/inputEx.css" />
+
+        <!-- YUI-accordion CSS -->
+        <link rel="stylesheet" type="text/css" href="./plugins/editor/lib/accordionview/assets/skins/sam/accordionview.css" />
+
+        <!-- WireIt CSS -->
+        <link rel="stylesheet" type="text/css" href="./assets/WireIt.css" />
+        <link rel="stylesheet" type="text/css" href="./plugins/editor/assets/WireItEditor.css" />
+
+        <style>
+            div.WireIt-Container {
+                width: 330px; /* Prevent the modules from scratching on the right */
+            }
+
+            div.WireIt-InOutContainer {	
+                width: 150px;
+            }
+
+            div.WireIt-GlobalVariable {	
+                width: 200px;
+                height: 200px;
+            }
+
+            div.WireIt-Split {	
+                width: 100px;
+                height: 100px;
+            }
+
+            div.WireIt-Join {	
+                width: 100px;
+                height: 100px;
+            }
+
+            div.WireIt-InputExTerminal {
+                float: left;
+                width: 21px;
+                height: 21px;
+                position: relative;
+            }
+
+            div.WireIt-OutputExTerminal {
+                float: right;
+                width: 30px;
+                height: 30px;
+                position: relative;
+            }
+
+
+            div.WireIt-InputExTerminal div.WireIt-Terminal {
+                top: -3px;
+                left: -7px;
+            }
+
+            div.inputEx-Group div.inputEx-label {
+                width:100px;
+            }
+
+            div.WireIt-ImageContainer {
+                width: 200px;
+            }
+
+            div.Bubble div.body {
+                width: 70px;
+                height: 45px;
+                opacity: 0.8;
+                cursor: move;
+            }
+
+            .WiringEditor-module span {
+                position: relative;
+                top: -3px;
+            }
+
+
+        </style>
+
+
+        <!-- YUI -->
+        <script type="text/javascript" src="./lib/yui/utilities/utilities.js"></script>
+        <script type="text/javascript" src="./lib/yui/resize/resize.js"></script>
+        <script type="text/javascript" src="./lib/yui/layout/layout.js"></script>
+        <script type="text/javascript" src="./lib/yui/container/container.js"></script>
+        <script type="text/javascript" src="./lib/yui/json/json.js"></script>
+        <script type="text/javascript" src="./lib/yui/button/button.js"></script>
+        <script type="text/javascript" src="./lib/yui/tabview/tabview.js"></script>
+        <script type="text/javascript" src="./plugins/editor/lib/accordionview/accordionview.js"></script>
+        <script type="text/javascript" src="./lib/excanvas.js"></script>
+
+
+        <!-- ResEval -->
+        <script type="text/javascript" src="./lib_reseval/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript" src="./lib_reseval/jquery-ui-1.8.15.custom.min.js"></script>
+        <script type="text/javascript" src="./lib_reseval/jsm.js"></script>
+
+        <!-- WireIt -->
+        <!-- <script type="text/javascript" src="./plugins/editor/js/WiringEditor.js"></script> -->
+        <script type="text/javascript" src="./plugins/editor/js/WiringEditor.js"></script>
+        <script type="text/javascript" src="./build/my-wireit-inputex-editor.js"></script>
+        <script type="text/javascript" src="./plugins/editor/js/adapters/json-rpc.js"></script>
+        <script type="text/javascript" src="./plugins/editor/examples/WiringEditor/my_demo.js"></script>
+        <script type="text/javascript" >
+            
+            function getUrlVars() {
+                var vars = {};
+                var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+                    vars[key] = value;
+                });
+                return vars;
+            }
+            var confPackURL = getUrlVars()["confPackURL"];
+            
+            var config;
+            $.ajax({
+                url : confPackURL+"/configuration.xml",
+                dataType : 'xml',
+                success: function (data,status) {
+                        config=data;
+                },
+                    async: false
+            });
+
+            var paradigm ="";
+            var platformConfiguration = $("configuration", config);
+            var features = new Object();
+            
+            var featuresTags = $("feature",config);
+            $.each(featuresTags,function(index,feat){
+                features[feat.attr(name)] = true;
+            });
+            
+            var componentsRepoURL = $($("componentsRepository",config)[0]).attr("url");
+            var compositionsRepoURL = $($("compositionsRepository",config)[0]).attr("url");
+        </script>
+        <!-- <script type="text/javascript" src="./examples/WiringEditor/demo.js"></script>-->
+
+
+        <style>
+
+
+            /* Comment Module */
+            div.WireIt-Container.WiringEditor-module-comment { width: 200px; }
+            div.WireIt-Container.WiringEditor-module-comment div.body { background-color: #EEEE66; }
+            div.WireIt-Container.WiringEditor-module-comment div.body textarea { background-color: transparent; font-weight: bold; border: 0; }
+        </style>
+
+
+        <script>
+
+
+            // InputEx needs a correct path to this image
+            inputEx.spacerUrl = "./plugins/inputex/lib/inputex/images/space.png";
+
+
+            YAHOO.util.Event.onDOMReady( function() {
+                try {
+                    var editor = new WireIt.WiringEditor(demoLanguage); 
+		
+                    // Open the infos panel
+                    editor.accordionView.openPanel(2);
+                }
+                catch(ex) {
+                    console.log(ex);
+                }
+            });
+
+        </script>
+
+    </head>
+
+    <body class="yui-skin-sam">
+
+        <div id="top">
+            <div class="logo">WiringEditor</div>
+            <div id="toolbar"></div>
+            <div class="copyright">
+                <span>Hello there !</span> 
+                <a href="../..">back to WireIt</a>
+            </div>
+        </div>
+
+
+        <div id="left">
+
+            <ul id="modulesAccordionView">
+
+                <li>
+                    <h2>Components </h2>
+                    <div>
+                        <div id='module-category-component'></div>
+                    </div>
+                </li>
+
+                <li>
+                    <h2>Global Variables</h2>
+                    <div>
+                        <div id='module-category-global-variable'></div>
+                    </div>
+                </li>
+
+                <li>
+                    <h2>Parallel Flows</h2>
+                    <div>
+                        <div id='module-category-parallel-flows'></div>
+                    </div>
+                </li>
+            </ul>
+
+        </div>
+
+        <div id="right">
+            <ul id="accordionView">
+                <li>
+                    <h2>Configuration Parameters</h2>
+                    <div>
+                        <div id="propertiesForm"></div>
+                    </div>
+                </li>
+                <li>
+                    <h2>Minimap</h2>
+                    <div style='position: relative;'>
+                        <div id="layerMap"></div>
+                    </div>
+                </li>
+                <li>
+                    <h2>Infos</h2>
+                    <div>
+                        <div style="padding: 10px;">
+                            <p>This example shows how to use the <i>ImageContainer</i> and <i>FormContainer</i> in a language definition.</p>
+                            <br />
+                            <p><b>Drag and drop modules from the Module list</b> on the left to the working layer in the middle.</p>
+                            <br />
+                            <p><a href="./examples/WiringEditor/demo.js" target="_new">Click here to view the language definition for this editor.</a></p>
+                        </div>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+
+        <div id="center">
+            <!-- layer -->
+        </div>
+
+
+        <div id="helpPanel">
+            <div class="hd">Welcome to the WiringEditor demonstration</div>
+            <div class="bd" style="text-align: left;">
+
+                <p>This example shows how to use the <i>ImageContainer</i> and <i>FormContainer</i> in a language definition.</p>
+                <br />
+                <p><b>Drag and drop modules from the Module list</b> on the left to the working layer in the middle.</p>
+                <br />
+                <p><a href="./examples/WiringEditor/demo.js" target="_new">Click here to view the language definition for this editor.</a></p>
+                <br />
+                <p>Close this dialog to test the WiringEditor</p>
+            </div>
+        </div>
+
+    </body>
+</html>

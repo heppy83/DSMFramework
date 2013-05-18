@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Feature Selection </title>
+
+<link rel="stylesheet" type="text/css" href="./tooltip/style.css" />
+<script type="text/javascript" language="javascript" src="./tooltip/script.js"></script>
+
+<script type="text/javascript" language="javascript">
+	fList= {};
+	function addFeature(f) {
+		if(fList[f]==undefined)
+			fList[f]=true;
+		else
+			fList[f]=!fList[f];
+	}
+	
+	function checkCompatibility(constraint){
+		
+		constraint = constraint.replaceAll(" XOR ", " != ");
+		constraint = constraint.replaceAll(" AND ", " && ");
+		constraint = constraint.replaceAll(" OR ", " || ");
+		constraint = constraint.replaceAll(" NOT", " !");
+		
+		String[] tokens = constraint.split(" ");
+		
+		for(t=0; t<tokens.length; t++){
+			if (featureList.containsKey(tokens[t]))
+				constraint = constraint.replaceAll(tokens[t], featureList.get(tokens[t]).toString());
+		}
+		
+		res = eval(constraint);
+		
+		if(res==false)
+			alert ('This selection is not valid! It brakes the associated constraint:' + constraint);
+			
+	}
+	
+</script>
+
+</head>
+<body>
+
+<input name="data" type="checkbox" value="Data" onclick="addFeature('data'); checkCompatibility('data_flow OR blackboard')" onmouseover="tooltip.show('Testo che voglio');" onmouseout="tooltip.hide();" /> Data
+<input name="svc" type="checkbox" value="service" onclick="addFeature('svc')"/> Service
+<input name="ui" type="checkbox" value="ui" onclick="addFeature('ui')" /> Service
+
+
+</body>
+</html>

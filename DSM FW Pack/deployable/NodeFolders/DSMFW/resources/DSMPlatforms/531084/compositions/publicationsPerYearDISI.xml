@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mashup name="Publications per year DISI" configurationPackageURL="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/">
+		
+		<component id="C1" name="DISI Researchers" type="data" binding="REST" endpoint="" syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/disiResearchers.png">
+	
+			<operation id="OP1-1" name="Get Researchers" type="request-response" reference="GET http://localhost:8070/ResEvalServices/reseval/rest/disiResearchers">
+					
+					<outputParameter id="O1-1" name="researchers" >
+						<has_dataType ref="researchers" />
+					</outputParameter>
+			</operation>
+		
+		</component>
+		
+		<component id="C2" name="Scholar" type="service" binding="REST" endpoint="" syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/scholar.png">
+		
+			<operation id="OP1-2" name="Retrieve Publications" type="request-response" reference="POST http://localhost:8070/ResEvalServices/reseval/rest/scholar">
+					<inputParameter id="I1-2" name="researchers" manualInput="no" optional="no">
+						<has_dataType ref="researchers" />
+					</inputParameter>
+					
+					<outputParameter id="O1-2" name="publications" >
+						<has_dataType ref="publications" />
+					</outputParameter>
+			</operation>
+	
+		</component>
+	
+		<component id="C3" name="Publications per Year" type="service" binding="REST" endpoint=""  syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/hIndex.png">
+		
+			<operation id="OP1-3" name="Compute Impact" type="request-response" reference="POST http://localhost:8070/ResEvalServices/reseval/rest/publicationsPerYear">
+					<inputParameter id="I1-3" name="publicationSet" manualInput="no" optional="no">
+						<has_dataType ref="publications" />
+					</inputParameter>
+					
+					<outputParameter id="O1-3" name="impactValues" >
+						<has_dataType ref="publicationsPerYearValues" />
+					</outputParameter>
+			</operation>
+		
+		</component>
+		
+		<component id="C4" name="Bar Chart" type="ui" binding="javascript" endpoint="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/barChart.js" reference="barChart" syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/barChart.png">
+		
+			<operation id="OP1-4" name="Plot Chart" type="one-way" reference="plot">
+					<inputParameter id="I1-4" name="xAxisValues" manualInput="no" optional="no">
+						<has_dataType ref="*" />
+					</inputParameter>
+					<inputParameter id="I2-4" name="yAxisValues" manualInput="no" optional="no">
+						<has_dataType ref="*" />
+					</inputParameter>
+			</operation>
+		
+		</component>
+		
+		<!-- <constant id="CNST1" name="name" value="Tom Smith">
+			<has_dataType ref="string" />
+			<feeds_inputParameter ref="I1-1" />
+		</constant> -->
+		
+		<page id="P1" name="page1" URL="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/templates/chartTemplate.html">
+			<viewport id="VP1" name="_viewport_ChartViewPort" >
+				<displays_component ref="C4" />
+			</viewport>
+		</page>
+		
+		<!-- Data flow -->
+		<dfConnector id="DF1"> 
+			<source_outputParameter ref="O1-1" /> 
+			<target_inputParameter ref="I1-2" />
+		</dfConnector>
+		<dfConnector id="DF2"> 
+			<source_outputParameter ref="O1-2" /> 
+			<target_inputParameter ref="I1-3" />
+		</dfConnector>
+		<dfConnector id="DF3"> 
+			<source_outputParameter ref="O1-3" /> 
+			<target_inputParameter ref="I2-4" />
+		</dfConnector>
+		<dfConnector id="DF4"> 
+			<source_outputParameter ref="O1-1" /> 
+			<target_inputParameter ref="I1-4" />
+		</dfConnector>
+		
+</mashup>

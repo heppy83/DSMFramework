@@ -1,0 +1,13 @@
+<component name="Publications per Year" type="service" binding="REST" endpoint=""  syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/publicationPerYear.png">
+		
+			<operation name="Compute Impact" type="request-response" reference="POST http://localhost:8070/ResEvalServices/reseval/rest/publicationsPerYear">
+					<inputParameter name="publicationSet" manualInput="no" optional="no">
+						<has_dataType ref="publications" />
+					</inputParameter>
+					
+					<outputParameter name="impactValues" >
+						<has_dataType ref="publicationsPerYearValues" />
+					</outputParameter>
+			</operation>
+		
+		</component>

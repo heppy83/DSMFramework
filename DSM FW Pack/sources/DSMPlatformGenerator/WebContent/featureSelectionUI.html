@@ -1,0 +1,226 @@
+<html>
+<head>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<title>Feature Selection</title>
+<link href="./tooltip/style.css" type="text/css" rel="stylesheet">
+<script src="./tooltip/script.js" language="javascript" type="text/javascript"></script>
+<link href="./featureSelectionUI.css" type="text/css" rel="stylesheet">
+<script language="javascript" type="text/javascript">
+				
+					fList= {};
+					
+					function addFeature(f, constr) {
+						if(fList[f]==undefined)
+							fList[f]={selected:true, constraint:constr};
+						else
+							fList[f].selected=!fList[f].selected;
+					}
+					
+					function checkCompatibility(){
+						
+						//for(f=0; f<fList.length; f++){
+						for(c in fList){
+							if(fList[c].selected==true && fList[c].constraint!=""){
+								constraint = fList[c].constraint;
+						
+								tokens = constraint;
+								
+								constraint = constraint.replace(/ XOR /gi, " != ");
+								constraint = constraint.replace(/ AND /gi, " && ");
+								constraint = constraint.replace(/ OR /gi, " || ");
+								constraint = constraint.replace(/NOT\(/gi, "!(");
+								
+								tokens = tokens.replace(/ XOR /gi, " ");
+								tokens = tokens.replace(/ AND /gi, " ");
+								tokens = tokens.replace(/ OR /gi, " ");
+								tokens = tokens.replace(/NOT\(/gi, "(");
+								tokens = tokens.replace(/\(/g, "");
+								tokens = tokens.replace(/\)/g, "");
+								
+								tokens = tokens.split(" ");
+								
+								t=0;
+								while(t<tokens.length){
+									tokens[t] = tokens[t].trim();
+									
+									if(tokens[t]!=""){
+										if (fList[tokens[t]])
+											constraint = constraint.replace(tokens[t], fList[tokens[t]].selected);
+										else
+											constraint = constraint.replace(tokens[t],false);
+									}
+									t++;
+								}
+								
+								res = eval(constraint);
+								
+								if(res==false){
+									document.getElementById("checkResult").style.color = "darkred";
+									document.getElementById("checkResult").innerHTML='This selection is not valid! It brakes the constraint of feature \"' + c + '\"\n Constraint: ' + fList[c].constraint + '\n\n Selection values: '+ constraint;
+									return 0;
+								}
+							}
+						}
+						
+						document.getElementById("checkResult").style.color = "green";
+						document.getElementById("checkResult").innerHTML="Constraints compatibility check completed successfully!";
+						document.getElementById("generateButton").disabled = false;
+					}
+									
+				</script>
+</head>
+<body style="padding:20px;" onload=" addFeature('general_constraints','((control_flow XOR data_flow) OR user_interface) AND ((data_component OR service_component OR UI_component)) AND ((max_0_operation_per_component AND NOT(max_1_operation_per_component) AND NOT(max_N_operation_per_component)) OR (NOT(max_0_operation_per_component) AND max_1_operation_per_component AND NOT(max_N_operation_per_component)) OR (NOT(max_0_operation_per_component) AND NOT(max_1_operation_per_component) AND max_N_operation_per_component)) AND (NOT(data_flow OR blackboard) OR ((data_flow OR blackboard) AND ((max_1_input_param_per_operation XOR max_N_input_param_per_operation) OR NOT(request_response_for_data AND request_response_for_service AND one_way_for_service AND one_way_for_UI AND solicit_response_for_service)) AND ((max_1_output_param_per_operation XOR max_N_output_param_per_operation) OR NOT(request_response_for_data AND request_response_for_service AND notification_for_service AND notification_for_UI AND solicit_response_for_service))))'); ">
+<center><h2> Features Selection</h2></center>
+<br>
+<br>
+<form method="post" action="GenerateDSMLanguagesAndPlatform" enctype="multipart/form-data">
+<br>
+<br>
+<br>
+<div class="component">
+<h3>Components Features</h3>
+<br>
+<input name="data_component" onmouseover="tooltip.show('Allows having data source components in the composition language. Data components provide data as output and are typically not involved in data processing and transformation. ');" onmouseout="tooltip.hide();" onclick="addFeature('data_component','(blackboard OR data_flow) AND request_response_for_data');" type="checkbox">  Data Component<br>
+<br>
+&nbsp;&nbsp;<input name="request_response_for_data" onmouseover="tooltip.show('Data components can include request-response operations, that is, synchronous operations receiving some inputs and producing some output. ');" onmouseout="tooltip.hide();" onclick="addFeature('request_response_for_data','data_component AND (RSS_for_data OR atom_for_data OR REST_for_data OR SOAP_for_data OR javascript_for_data)');" type="checkbox">  Request-response operations for data components<br>
+<br>
+&nbsp;&nbsp;<input name="RSS_for_data" onmouseover="tooltip.show('Data components can be implemented as RSS feeds');" onmouseout="tooltip.hide();" onclick="addFeature('RSS_for_data','data_component');" type="checkbox"> RSS for Data components<br>
+<br>
+&nbsp;&nbsp;<input name="atom_for_data" onmouseover="tooltip.show('Data components can be implemented as Atom feeds');" onmouseout="tooltip.hide();" onclick="addFeature('atom_for_data','data_component');" type="checkbox"> Atom for Data components<br>
+<br>
+&nbsp;&nbsp;<input name="REST_for_data" onmouseover="tooltip.show('Data components can be implemented as REST services');" onmouseout="tooltip.hide();" onclick="addFeature('REST_for_data','data_component');" type="checkbox"> REST for Data components<br>
+<br>
+&nbsp;&nbsp;<input name="SOAP_for_data" onmouseover="tooltip.show('Data components can be implemented as SOAP services');" onmouseout="tooltip.hide();" onclick="addFeature('SOAP_for_data','data_component');" type="checkbox"> SOAP for Data components<br>
+<br>
+&nbsp;&nbsp;<input name="javascript_for_data" onmouseover="tooltip.show('Data components can be implemented as JavaScript APIs');" onmouseout="tooltip.hide();" onclick="addFeature('javascript_for_data','data_component');" type="checkbox"> JavaScript for Data components<br>
+<br>
+<input name="service_component" onmouseover="tooltip.show('Allows having service components in the composition language. Service components can get data, provide data or both and they typically do some data processing. ');" onmouseout="tooltip.hide();" onclick="addFeature('service_component','(request_response_for_service OR one_way_for_service OR notification_for_service OR solicit_response_for_service)');" type="checkbox"> Service Component<br>
+<br>
+&nbsp;&nbsp;<input name="request_response_for_service" onmouseover="tooltip.show('Service components can include request-response operations, that is, synchronous operations receiving some inputs and producing some output. ');" onmouseout="tooltip.hide();" onclick="addFeature('request_response_for_service','service_component AND (RSS_for_service OR atom_for_service OR REST_for_service OR SOAP_for_service OR javascript_for_service)');" type="checkbox"> Request-response operations for service components<br>
+<br>
+&nbsp;&nbsp;<input name="one_way_for_service" onmouseover="tooltip.show('Service components can include one-way operations, that is, operations only receiving some inputs and providing no outputs. ');" onmouseout="tooltip.hide();" onclick="addFeature('one_way_for_service','service_component AND (RSS_for_service OR atom_for_service OR REST_for_service OR SOAP_for_service OR javascript_for_service)');" type="checkbox"> One-way operations for service components<br>
+<br>
+&nbsp;&nbsp;<input name="notification_for_service" onmouseover="tooltip.show('Service components can include notification operations, that is, operations asynchronously providing outputs and receiving no inputs. ');" onmouseout="tooltip.hide();" onclick="addFeature('notification_for_service','service_component AND (SOAP_for_service OR javascript_for_service)');" type="checkbox"> Notification operations for service components<br>
+<br>
+&nbsp;&nbsp;<input name="solicit_response_for_service" onmouseover="tooltip.show('Service components can include solicit-response operations, that is, operations asynchronously providing outputs and waiting to receive some inputs. ');" onmouseout="tooltip.hide();" onclick="addFeature('solicit_response_for_service','service_component AND SOAP_for_service');" type="checkbox"> Solicit-response operations for service components<br>
+<br>
+&nbsp;&nbsp;<input name="RSS_for_service" onmouseover="tooltip.show('Service components can be implemented as RSS feeds');" onmouseout="tooltip.hide();" onclick="addFeature('RSS_for_service','service_component');" type="checkbox"> RSS for Service components<br>
+<br>
+&nbsp;&nbsp;<input name="atom_for_service" onmouseover="tooltip.show('Service components can be implemented as Atom feeds');" onmouseout="tooltip.hide();" onclick="addFeature('atom_for_service','service_component');" type="checkbox"> Atom for Service components<br>
+<br>
+&nbsp;&nbsp;<input name="REST_for_service" onmouseover="tooltip.show('Service components can be implemented as REST service');" onmouseout="tooltip.hide();" onclick="addFeature('REST_for_service','service_component');" type="checkbox"> REST for Service components<br>
+<br>
+&nbsp;&nbsp;<input name="SOAP_for_service" onmouseover="tooltip.show('Service components can be implemented as SOAP services');" onmouseout="tooltip.hide();" onclick="addFeature('SOAP_for_service','service_component');" type="checkbox"> SOAP for Service components<br>
+<br>
+&nbsp;&nbsp;<input name="javascript_for_service" onmouseover="tooltip.show('Service components can be implemented as JavaScript APIs');" onmouseout="tooltip.hide();" onclick="addFeature('javascript_for_service','service_component');" type="checkbox"> JavaScript for Service components<br>
+<br>
+<input name="UI_component" onmouseover="tooltip.show('Allows having UI components in the composition language. UI components typically render data and allow for direct user interactions with the composition. They can either get data as input or provide date as output, but do not support request-response operations.');" onmouseout="tooltip.hide();" onclick="addFeature('UI_component','user_interface AND (one_way_for_UI OR notification_for_UI OR isolated_UI)');" type="checkbox"> UI Component<br>
+<br>
+&nbsp;&nbsp;<input name="one_way_for_UI" onmouseover="tooltip.show('Service components can include one-way operations, that is, operations only receiving some inputs and providing no outputs. ');" onmouseout="tooltip.hide();" onclick="addFeature('one_way_for_UI','UI_component AND javascript_for_UI');" type="checkbox"> One-way operations for UI components<br>
+<br>
+&nbsp;&nbsp;<input name="notification_for_UI" onmouseover="tooltip.show('UI components can include notification operations, that is, operations asynchronously providing outputs (typically as consequence of a user action) and receiving no inputs. ');" onmouseout="tooltip.hide();" onclick="addFeature('notification_for_UI','UI_component AND javascript_for_UI');" type="checkbox"> Notification operations for UI components<br>
+<br>
+&nbsp;&nbsp;<input name="isolated_UI" onmouseover="tooltip.show('UI components can include components with no operations exposed to the external world, that is, widgets that only render some data but have no inputs or outputs. ');" onmouseout="tooltip.hide();" onclick="addFeature('isolated_UI','UI_component AND (javascript_for_UI OR W3C_Widget_for_UI)');" type="checkbox"> Isolated UI components<br>
+<br>
+&nbsp;&nbsp;<input name="javascript_for_UI" onmouseover="tooltip.show('UI components can be implemented as JavaScript components');" onmouseout="tooltip.hide();" onclick="addFeature('javascript_for_UI','UI_component');" type="checkbox"> javascript for UI components<br>
+<br>
+&nbsp;&nbsp;<input name="W3C_Widget_for_UI" onmouseover="tooltip.show('UI components can be implemented as W3C Widgets');" onmouseout="tooltip.hide();" onclick="addFeature('W3C_Widget_for_UI','UI_component');" type="checkbox"> W3C Widgets for UI components<br>
+<br>
+<input name="manual_input" onmouseover="tooltip.show('Allows having a manual input box next to an input parameter port, so that it is possible to choose at design time whether to provide the inputs manually or to connect the input to an operation output through a connector.');" onmouseout="tooltip.hide();" onclick="addFeature('manual_input','blackboard OR data_flow');" type="checkbox"> Manual input for input parameters<br>
+<br>
+<input name="configuration_param" onmouseover="tooltip.show('Allows having a configuration parameters for components to be set up at design time and used to initialize the components at the mashup runtime.');" onmouseout="tooltip.hide();" onclick="addFeature('configuration_param','');" type="checkbox"> Configuration parameters<br>
+<br>
+<input name="max_0_operation_per_component" onmouseover="tooltip.show('Any component can have maximum 1 operation.');" onmouseout="tooltip.hide();" onclick="addFeature('max_0_operation_per_component','isolated_UI AND NOT(data_component OR service_component OR one_way_for_UI OR notification_for_UI) AND NOT(data_flow OR control_flow)');" type="checkbox"> No operations for components<br>
+<br>
+<input name="max_1_operation_per_component" onmouseover="tooltip.show('Any component can have maximum 1 operation.');" onmouseout="tooltip.hide();" onclick="addFeature('max_1_operation_per_component','NOT(isolated_UI AND NOT(data_component OR service_component OR one_way_for_UI OR notification_for_UI))');" type="checkbox"> Maximum 1 operation per component<br>
+<br>
+<input name="max_N_operation_per_component" onmouseover="tooltip.show('Component do not have any maximum number of operations.');" onmouseout="tooltip.hide();" onclick="addFeature('max_N_operation_per_component','NOT(isolated_UI AND NOT(data_component OR service_component OR one_way_for_UI OR notification_for_UI))');" type="checkbox"> No maximum number of operation per component<br>
+<br>
+<input name="max_1_input_param_per_operation" onmouseover="tooltip.show('Components operations can have maximum 1 input parameter.');" onmouseout="tooltip.hide();" onclick="addFeature('max_1_input_param_per_operation','(data_flow OR blackboard) AND (request_response_for_data OR request_response_for_service OR one_way_for_service OR one_way_for_UI)');" type="checkbox"> Maximum 1 input parameter per opearation<br>
+<br>
+<input name="max_N_input_param_per_operation" onmouseover="tooltip.show('Components operations do not have any maximum number of input parameters.');" onmouseout="tooltip.hide();" onclick="addFeature('max_N_input_param_per_operation','(data_flow OR blackboard) AND (request_response_for_data OR request_response_for_service OR one_way_for_service OR one_way_for_UI OR solicit_response_for_service)');" type="checkbox"> No maximum number of input parameters per operation<br>
+<br>
+<input name="max_1_output_param_per_operation" onmouseover="tooltip.show('Components operations can have maximum 1 output parameter.');" onmouseout="tooltip.hide();" onclick="addFeature('max_1_output_param_per_operation','(data_flow OR blackboard) AND (request_response_for_data OR request_response_for_service OR notification_for_service OR notification_for_UI OR solicit_response_for_service)');" type="checkbox"> Maximum 1 output parameter per opearation<br>
+<br>
+<input name="max_N_output_param_per_operation" onmouseover="tooltip.show('Components operations do not have any maximum number of output parameters.');" onmouseout="tooltip.hide();" onclick="addFeature('max_N_output_param_per_operation','data_flow OR blackboard');" type="checkbox"> No maximum number of output parameters per operation<br>
+<br>
+</div>
+
+<div class="controlflow">
+<h3>Control Flow Features</h3>
+<br>
+<br>
+<input name="control_flow" onmouseover="tooltip.show('The composition paradigm is control flow, that is, it is possible to explicitly define the operations invocation sequence. Data passing is not managed and, if needed, must be supported through a blackboard approach');" onmouseout="tooltip.hide();" onclick="addFeature('control_flow','');" type="checkbox"> Control flow<br>
+<br>
+&nbsp;&nbsp;<input name="split" onmouseover="tooltip.show('An explicit construct allowing the synchronization of parallel flows is included in the composition language. Only when all the incoming flows are ready the execution of the flow can proceed. Supported only in the control flow composition paradigms. This feature differs fromthe merge feature since here we have a conjunctive semantic (all the incoming flow ready to trigger next operaiton) while in the merge feature we ha a disjunctive semantic (only one ready to trigger).');" onmouseout="tooltip.hide();" onclick="addFeature('split','control_flow');" type="checkbox"> Split<br>
+<br>
+&nbsp;&nbsp;<input name="join" onmouseover="tooltip.show('An explicit construct allowing the creation of parallel flows is included in the composition language. Supported only in the control flow composition paradigm. This feature is semantically equal to the branch feature, but in this case we have an explicit construct in the language.');" onmouseout="tooltip.hide();" onclick="addFeature('join','control_flow');" type="checkbox"> Join<br>
+<br>
+<input name="condition" onmouseover="tooltip.show('Conditions can be set for each connector to define the possible flows of the composition. Conditions are supported both for control flow and data flow composition paradigms.');" onmouseout="tooltip.hide();" onclick="addFeature('condition','(control_flow AND blackboard) OR data_flow');" type="checkbox"> Conditions<br>
+<br>
+<input name="loop" onmouseover="tooltip.show('Loops are allowed in the composition language and can be implemented as conditional connectors loops. For this reason loop require condition and merge features to be supported.');" onmouseout="tooltip.hide();" onclick="addFeature('loop','control_flow AND condition AND NOT(no_merge)');" type="checkbox"> Loops<br>
+<br>
+<input name="no_merge" onmouseover="tooltip.show('Only one connector can be attached to the same input port. If not selected, as soon as one of the N incoming flows is ready the related operation is triggered (in case of data flow, only if also the other input parameters are ready; input parameters are buffered while waiting for operation triggering). Supported both in control and data flow composition paradigms. having this feature not selected is different by the synchronization feature since here we would have a disjunctive semantic (only one ready to trigger) while in the synchronization feature we have a conjunctive semantic (all the incoming flows ready to trigger next operation).');" onmouseout="tooltip.hide();" onclick="addFeature('no_merge','');" type="checkbox"> Single connector for each input port (operation or input parameter)<br>
+<br>
+<input name="no_branch" onmouseover="tooltip.show('Only one connector can be attached to the same output port, this forbids the creation of parallel flows. Not selecting this feature is semantically equivalent to selecting the split feature, but in this case we do not have an explicit construct in the language.');" onmouseout="tooltip.hide();" onclick="addFeature('no_branch','');" type="checkbox"> Single connector for each output port (operation or output parameter)<br>
+<br>
+</div>
+
+<div class="datapassing">
+<h3>Data Passing Features</h3>
+<br>
+<br>
+<input name="data_flow" onmouseover="tooltip.show('The composition paradigm is data flow, that is, it is possible to explicitly define the flow of the data among components opearations. In this case the data passing and the control flow overlap since operations triggering depends on the data flow.');" onmouseout="tooltip.hide();" onclick="addFeature('data_flow','NOT(blackboard)');" type="checkbox"> Data flow<br>
+<br>
+<input name="blackboard" onmouseover="tooltip.show('The data passing is implemented through the use of global variables that can be read and/or written by all components operations.');" onmouseout="tooltip.hide();" onclick="addFeature('blackboard','NOT(data_flow)');" type="checkbox"> Blackboard<br>
+<br>
+<input name="support_reference_passing" onmouseover="tooltip.show('For performance reasons instead of passing actual data among components, a data reference passing mode can be used. Each component may support or not this mode; components supporting it receive and spit out only reference to data which is stored in a DB shared among them. Clearly all these components must belong to a unique system where they collaborate and share the same data resources. ');" onmouseout="tooltip.hide();" onclick="addFeature('support_reference_passing','(data_flow OR blackboard) AND service_component AND (RSS_for_service OR atom_for_service OR REST_for_service OR SOAP_for_service) AND NOT(condition)');" type="checkbox"> Reference passing mode<br>
+<br>
+<input name="auto_data_mapping" onmouseover="tooltip.show('Data mapping, when connecting two operations in the editor canvas, is done automatically based on the data types of input and output parameters. Clearly, this features works well if components share a common data model. In this case, the feature implies a significant increase in usability.');" onmouseout="tooltip.hide();" onclick="addFeature('auto_data_mapping','data_flow OR blackboard');" type="checkbox">  Automatic data-mapping<br>
+<!-- <br> -->
+<input style="visibility: hidden" name="general_constraints" onmouseover="tooltip.show('General constraints that must be always satisfied by the the features selection');" onmouseout="tooltip.hide();" onclick="addFeature('general_constraints','((control_flow XOR data_flow) OR user_interface) AND ((data_component OR service_component OR UI_component)) AND ((max_0_operation_per_component AND NOT(max_1_operation_per_component) AND NOT(max_N_operation_per_component)) OR (NOT(max_0_operation_per_component) AND max_1_operation_per_component AND NOT(max_N_operation_per_component)) OR (NOT(max_0_operation_per_component) AND NOT(max_1_operation_per_component) AND max_N_operation_per_component)) AND (NOT(data_flow OR blackboard) OR ((data_flow OR blackboard) AND ((max_1_input_param_per_operation XOR max_N_input_param_per_operation) OR NOT(request_response_for_data AND request_response_for_service AND one_way_for_service AND one_way_for_UI AND solicit_response_for_service)) AND ((max_1_output_param_per_operation XOR max_N_output_param_per_operation) OR NOT(request_response_for_data AND request_response_for_service AND notification_for_service AND notification_for_UI AND solicit_response_for_service))))');" type="checkbox" checked>
+<!-- General constraints<br>  <br>-->
+</div>
+
+<div class="presentation">
+<h3>Presentation Features</h3>
+<br>
+<br>
+<input name="user_interface" onmouseover="tooltip.show('The language provides support for user interface definition. This feature is needed to include UI components and pages (containing placeholders to host them) in the compositions.');" onmouseout="tooltip.hide();" onclick="addFeature('user_interface','UI_component AND (single_page XOR multi_page)');" type="checkbox"> User interface<br>
+<br>
+&nbsp;&nbsp;<input name="single_page" onmouseover="tooltip.show('Maximum one page (to be used to embed and visualize UI componenets) is allowed.');" onmouseout="tooltip.hide();" onclick="addFeature('single_page','user_interface');" type="checkbox"> Single page<br>
+<br>
+&nbsp;&nbsp;<input name="multi_page" onmouseover="tooltip.show('No maximum number of pages (to be used to embed and visualize UI componenets) is defined.');" onmouseout="tooltip.hide();" onclick="addFeature('multi_page','user_interface');" type="checkbox"> Multi page<br>
+<br>
+</div>
+
+<div class="collaboration">
+<h3>Collaboration Features</h3>
+<br>
+<br>
+<input name="collaboration" onmouseover="tooltip.show('Creation of collaborative compositions is supported by the language. It means that more than one user can work on the same instance of a composition. ');" onmouseout="tooltip.hide();" onclick="addFeature('collaboration','user_interface AND (any_user XOR role_based_access)');" type="checkbox"> Collaboration<br>
+<br>
+&nbsp;&nbsp;<input name="any_user" onmouseover="tooltip.show('A collaborative composition can be used by many different users. Any user can participate to the composition (concurrent components usage, a la Omelette Live Environment). No need for authorization.');" onmouseout="tooltip.hide();" onclick="addFeature('any_user','collaboration');" type="checkbox"> Any user<br>
+<br>
+&nbsp;&nbsp;<input name="role_based_access" onmouseover="tooltip.show('A collaborative composition can be used by many different users. Only authorized users can participate to the composition and each one has only access to the resources (i.e., pages) associated to his role. The roles list comes from a registry on the server');" onmouseout="tooltip.hide();" onclick="addFeature('role_based_access','collaboration');" type="checkbox"> Role-based access<br>
+<br>
+</div>
+
+<div class="generate">
+<h3>Generate!</h3>
+<!-- <br> Domain syntax:<br> -->
+<input type="file" title="Domain syntax" name="domain_syntax" style="visibility: hidden;">
+<br><br>
+<input type="button" value="Check constraints" onclick="checkCompatibility()">
+<br>
+<span id="checkResult" style="top: 10px; position: relative; color:darkred;"></span>
+<br>
+<br>
+<center>
+<input id="generateButton" value="Generate!!" type="submit" disabled>
+</center>
+</div>
+</form>
+</body>
+</html>

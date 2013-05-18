@@ -1,0 +1,993 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <title>WireIt - WiringEditor</title>
+        <link rel="icon" href="../favicon.ico" type="image/png" />
+        <link rel="SHORTCUT ICON" href="./favicon.ico" type="image/png" />
+
+        <!-- YUI -->
+        <link rel="stylesheet" type="text/css" href="./lib/yui/reset-fonts-grids/reset-fonts-grids.css" />
+        <link rel="stylesheet" type="text/css" href="./lib/yui/assets/skins/sam/skin.css" />
+
+        <!-- InputEx CSS -->
+        <link type="text/css" rel="stylesheet" href="./plugins/inputex/lib/inputex/css/inputEx.css" />
+
+        <!-- YUI-accordion CSS -->
+        <link rel="stylesheet" type="text/css" href="./plugins/editor/lib/accordionview/assets/skins/sam/accordionview.css" />
+
+        <!-- WireIt CSS -->
+        <link rel="stylesheet" type="text/css" href="./assets/WireIt.css" />
+        <link rel="stylesheet" type="text/css" href="./plugins/editor/assets/WireItEditor.css" />
+
+        <style>
+            div.WireIt-Container {
+                //width: 330px; /* Prevent the modules from scratching on the right */
+				min-height: 90px !important;
+				
+            }
+
+			
+            div.WireIt-InOutContainer {	
+                width: 150px;
+            }
+
+            div.WireIt-GlobalVariable {	
+                //width: 150px;
+				min-height: 50px;
+            }
+
+            div.WireIt-Split {	
+                //width: 100px;
+				//height: 50px;
+				min-height: 50px;
+            }
+
+            div.WireIt-Join {	
+                //width: 100px;
+				//height: 50px;
+				min-height: 50px;
+            }
+
+            div.WireIt-InputExTerminal {
+                float: left;
+                width: 21px;
+                height: 21px;
+                position: relative;
+            }
+
+            div.WireIt-OutputExTerminal {
+                float: right;
+                width: 30px;
+                height: 30px;
+                position: relative;
+            }
+
+
+            div.WireIt-InputExTerminal div.WireIt-Terminal {
+                top: -3px;
+                left: -7px;
+            }
+
+            div.inputEx-Group div.inputEx-label {
+                width:100px;
+            }
+
+            div.WireIt-ImageContainer {
+                width: 200px;
+            }
+
+            div.Bubble div.body {
+                width: 70px;
+                height: 45px;
+                opacity: 0.8;
+                cursor: move;
+            }
+
+            .WiringEditor-module span {
+                position: relative;
+                top: -3px;
+            }
+
+
+        </style>
+
+
+        <!-- YUI -->
+        <script type="text/javascript" src="./lib/yui/utilities/utilities.js"></script>
+        <script type="text/javascript" src="./lib/yui/resize/resize.js"></script>
+        <script type="text/javascript" src="./lib/yui/layout/layout.js"></script>
+        <script type="text/javascript" src="./lib/yui/container/container.js"></script>
+        <script type="text/javascript" src="./lib/yui/json/json.js"></script>
+        <script type="text/javascript" src="./lib/yui/button/button.js"></script>
+        <script type="text/javascript" src="./lib/yui/tabview/tabview.js"></script>
+        <script type="text/javascript" src="./plugins/editor/lib/accordionview/accordionview.js"></script>
+        <script type="text/javascript" src="./lib/excanvas.js"></script>
+
+
+        <!-- ResEval -->
+        <script type="text/javascript" src="./lib_reseval/jquery-1.6.4.min.js"></script>
+        <script type="text/javascript" src="./lib_reseval/jquery-ui-1.8.15.custom.min.js"></script>
+        <script type="text/javascript" src="./lib_reseval/jsm.js"></script>
+
+        <!-- WireIt -->
+        <!-- <script type="text/javascript" src="./plugins/editor/js/WiringEditor.js"></script> -->
+        <script type="text/javascript" src="./plugins/editor/js/WiringEditor.js"></script>
+        <script type="text/javascript" src="./build/my-wireit-inputex-editor.js"></script>
+        <script type="text/javascript" src="./plugins/editor/js/adapters/json-rpc.js"></script>
+        <script type="text/javascript" src="./plugins/editor/examples/WiringEditor/my_demo.js"></script>
+		
+        <script type="text/javascript" >
+            function getConfiguration(){
+				function getUrlVars() {
+					var vars = {};
+					var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+						vars[key] = value;
+					});
+					return vars;
+				}
+				var confPackURL = getUrlVars()["confPackURL"];
+				
+				var config;
+				$.ajax({
+					url : confPackURL+"/configuration.xml",
+					dataType : 'xml',
+					success: function (data,status) {
+							config=data;
+					},
+						async: false
+				});
+
+				editorConfiguration = new Object();
+				editorConfiguration.confPackURL = confPackURL;
+				var platformConfiguration = $("configuration", config);
+				editorConfiguration.features = new Object();
+				
+				var featuresTags = $("feature",config);
+				$.each(featuresTags,function(index,feat){
+					editorConfiguration.features[$(feat).attr("name")] = true;
+				});
+				
+				editorConfiguration.componentsRepoURL = $($("componentsRepository",config)[0]).attr("url");
+				editorConfiguration.compositionsRepoURL = $($("compositionsRepository",config)[0]).attr("url");
+			}
+        </script>
+        <!-- <script type="text/javascript" src="./examples/WiringEditor/demo.js"></script>-->
+
+		<script type="text/javascript">
+		
+			function createConfiguration(){
+				var config;
+				modulesDef=new Object();
+				modulesDef.modules=new Array();
+				
+				$.ajax({
+					url : "http://localhost:1337/DSMFW/componentRegistry",
+					data: {confPackURL: editorConfiguration.confPackURL} ,
+					dataType : 'json',
+					success: function (data,status) {
+							config=data;
+					},
+					async: false
+				});
+				
+				for(var i in config.components){
+					var descr;
+					$.ajax({
+						url : config.components[i],
+						dataType : 'xml',
+						success: function (data,status) {
+								descr=data;
+						},
+						async: false
+					});
+					
+					
+					var module = new Object();
+					module.container = new Object();
+					
+					/*component*/
+					var componentTag = $("component",descr);
+					
+					module.name = $(componentTag).attr("name");
+					module.category = "Components";
+					
+					module.container.xtype = "ComponentContainer";
+					
+					if($(componentTag).attr("syntax")){
+						module.container.icon = $(componentTag).attr("syntax");
+						module.container.image = $(componentTag).attr("syntax");
+					}else{
+						module.container.icon = "./assets/publications.png";
+						module.container.image = "./assets/publications.png";
+					}
+					
+					module.container.type = $(componentTag).attr("type");
+					module.container.binding = $(componentTag).attr("binding");
+					module.container.endpoint = $(componentTag).attr("endpoint");
+					module.container.supportReferencePassing = $(componentTag).attr("supportReferencePassing");
+					module.container.id = $(componentTag).attr("id");;
+					
+					
+					module.container.fields = new Array();
+					
+					var index=0;					
+					
+					var inputParameterTags, outputParameterTags;
+					
+					/*operations*/
+					var operationTags = $("operation",componentTag);
+					
+					/*gestire una operazione*/	
+					if(operationTags.length == 1){
+						
+						$.each(operationTags,function(index_op,operation){
+							var op = $(operation);
+							var idOp = op.attr("id");
+							var nameOp = op.attr("name");
+							var typeOp = op.attr("type");
+							var referenceOp = op.attr("reference");
+						
+							module.container.fields[index] = new Object();
+							module.container.fields[index].type="operation",
+							module.container.fields[index].name=nameOp;
+							module.container.fields[index].id=idOp;
+							module.container.fields[index].operationType=typeOp;
+							module.container.fields[index].legend=nameOp;
+							module.container.fields[index].reference=referenceOp;
+							
+							module.container.fields[index].fields= new Array();
+							
+							if(editorConfiguration.features.data_flow || editorConfiguration.features.blackboard){
+								
+								var index_params=0;
+								
+								inputParameterTags =  $("inputParameter", op);
+								$.each(inputParameterTags, function(index_in, input){
+									var input = $(input);
+									var idIP = input.attr("id");
+									var nameIP = input.attr("name");
+									var manualInputIP = input.attr("manualInput");
+									var optionalIP = input.attr("optional");
+								
+									module.container.fields[index].fields[index_params]= new Object();
+									
+									module.container.fields[index].fields[index_params].type="inputParameter";
+									module.container.fields[index].fields[index_params].label=nameIP;
+									module.container.fields[index].fields[index_params].name=nameIP;   //idIP;
+									module.container.fields[index].fields[index_params].id=idIP;
+									module.container.fields[index].fields[index_params].wirable=true;
+									module.container.fields[index].fields[index_params].manualInput=manualInputIP;
+									if(module.container.fields[index].fields[index_params].manualInput == "yes"){
+										module.container.fields[index].fields[index_params].manualInput=true;
+									}else if(module.container.fields[index].fields[index_params].manualInput == "no"){
+										module.container.fields[index].fields[index_params].manualInput=false;
+									}
+									module.container.fields[index].fields[index_params].optional=optionalIP;
+								
+									var has_dataType = $("has_dataType", inputParameterTags);
+									var ref = $(has_dataType).attr("ref");
+									module.container.fields[index].fields[index_params].has_dataType=new Object();
+									module.container.fields[index].fields[index_params].has_dataType.ref=ref;
+									
+									index_params++;
+								}); 
+								
+								
+								outputParameterTags =  $("outputParameter", op);
+								$.each(outputParameterTags, function(index_out,operation){
+									var output = $(operation);
+									var idOP = output.attr("id");
+									var nameOP = output.attr("name");
+									
+									module.container.fields[index].fields[index_params]= new Object();
+									
+									module.container.fields[index].fields[index_params].type="outputParameter";
+									module.container.fields[index].fields[index_params].label=nameOP;
+									module.container.fields[index].fields[index_params].name=nameOP;   //idOP;
+									module.container.fields[index].fields[index_params].id=idOP;
+									module.container.fields[index].fields[index_params].wirable=true;
+									
+									var has_dataType = $("has_dataType", outputParameterTags);
+									var ref = $(has_dataType).attr("ref");
+									module.container.fields[index].fields[index_params].has_dataType=new Object();
+									module.container.fields[index].fields[index_params].has_dataType.ref=ref;
+									
+									index_params++;
+								});
+							}
+						index++;
+							
+						});
+						
+						/*configurationParameter*/
+						var configurationTags = $("configurationParameter",componentTag);
+						if(configurationTags.length>0 || module.container.type=="ui"){
+						
+							module.container.fields[index] = new Object();
+							module.container.fields[index].type="configurationParameter";
+							module.container.fields[index].legend="Configuration Parameters";
+							//module.container.fields[index].manualInput=$(configuration).attr("manualInput");
+							module.container.fields[index].collapsible=true;
+							module.container.fields[index].collapsed=true;
+	
+							module.container.fields[index].fields = new Array();
+							
+							$.each(configurationTags,function(index_conf,configuration){
+								
+							    module.container.fields[index].fields[index_conf] = new Object();
+								module.container.fields[index].fields[index_conf].type="string";
+								module.container.fields[index].fields[index_conf].name=$(configuration).attr("name");
+								module.container.fields[index].fields[index_conf].label=$(configuration).attr("name");
+								module.container.fields[index].fields[index_conf].configurationParameterName=$(configuration).attr("name");
+								module.container.fields[index].fields[index_conf].manualInput=$(configuration).attr("manualInput");
+								var has_dataType = $("has_dataType", configurationTags)[0];
+								var ref = $(has_dataType).attr("ref");
+								module.container.fields[index].fields[index_conf].has_dataType=new Object();
+								module.container.fields[index].fields[index_conf].has_dataType.ref=ref;
+								//module.container.fields[index].fields[0] = new Object();
+								//module.container.fields[index].fields[0].type="group";
+								//module.container.fields[index].fields[0].legend=$(configuration).attr("name");
+								//module.container.fields[index].fields[0].collapsible=true;
+								//module.container.fields[index].fields[0].collapsed=true;
+							
+								//module.container.fields[index].fields[0].fields = new Array();
+								
+							});
+							
+							if(module.container.type=="ui"){
+								
+								var vp = new Object();
+								vp.type='select';
+								vp.label='ViewPort';
+								vp.choices=new Array();
+								vp.choices[0]= new Object();
+								vp.choices[0].value = "select template";
+								module.container.fields[index].fields.push(vp);
+								
+							}
+							index++;
+							
+						}
+					/*gestire più di una operazione*/
+					}
+					else if(operationTags.length > 1) {
+						
+						var name_op=new Array();
+						var id_op=new Array();
+						
+						module.container.fields[index] = new Object();
+						module.container.fields[index].type='select';
+						module.container.fields[index].label='Operation';
+						
+						module.container.fields[index].choices=new Array();
+						for(var i=0;i<operationTags.length;i++){
+							module.container.fields[index].choices[i]=new Object();
+							name_op[i]=$(operationTags[i]).attr("name");
+							id_op[i]=$(operationTags[i]).attr("id");
+							module.container.fields[index].choices[i].value=name_op[i];	
+						}
+						
+						module.container.fields[index].value=name_op[0];
+						
+						module.container.fields[index].interactions=new Array();
+						
+						for(var j=0;j<operationTags.length;j++){
+							
+							module.container.fields[index].interactions[j]=new Object();
+							module.container.fields[index].interactions[j].valueTrigger=name_op[j];
+							module.container.fields[index].interactions[j].actions=new Array();
+							for(var h=0;h<operationTags.length;h++){
+								
+								module.container.fields[index].interactions[j].actions[h]=new Object();
+								module.container.fields[index].interactions[j].actions[h].name=id_op[h]; //idOp
+								if(h==j){
+									module.container.fields[index].interactions[j].actions[h].action="show";
+								}else{
+									module.container.fields[index].interactions[j].actions[h].action="hide";
+								}
+							}
+						}
+						
+						index++;
+						
+						$.each(operationTags,function(index_op,operation){
+							var op = $(operation);
+							var idOp = op.attr("id");
+							var nameOp = op.attr("name");
+							var typeOp = op.attr("type");
+							var referenceOp = op.attr("reference");
+						
+							module.container.fields[index] = new Object();
+							module.container.fields[index].type="operation",
+							module.container.fields[index].name=nameOp;
+							module.container.fields[index].id=idOp;
+							module.container.fields[index].operationType=typeOp;
+							module.container.fields[index].legend=nameOp;
+							module.container.fields[index].reference=referenceOp;
+							
+							module.container.fields[index].fields= new Array();
+							
+							if(editorConfiguration.features.data_flow || editorConfiguration.features.blackboard){
+								
+								var index_params=0;
+								
+								inputParameterTags =  $("inputParameter", op);
+								$.each(inputParameterTags, function(index_in, input){
+									var input = $(input);
+									var idIP = input.attr("id");
+									var nameIP = input.attr("name");
+									var manualInputIP = input.attr("manualInput");
+									var optionalIP = input.attr("optional");
+								
+									module.container.fields[index].fields[index_params]= new Object();
+									
+									module.container.fields[index].fields[index_params].type="inputParameter";
+									module.container.fields[index].fields[index_params].label=nameIP;
+									module.container.fields[index].fields[index_params].name=nameIP;
+									module.container.fields[index].fields[index_params].id=idIP;								
+									module.container.fields[index].fields[index_params].wirable=true;
+									module.container.fields[index].fields[index_params].manualInput=manualInputIP;
+									if(module.container.fields[index].fields[index_params].manualInput == "yes"){
+										module.container.fields[index].fields[index_params].manualInput=true;
+									}else if(module.container.fields[index].fields[index_params].manualInput == "no"){
+										module.container.fields[index].fields[index_params].manualInput=false;
+									}
+									module.container.fields[index].fields[index_params].optional=optionalIP;
+								
+									var has_dataType = $("has_dataType", inputParameterTags);
+									var ref = $(has_dataType).attr("ref");
+									module.container.fields[index].fields[index_params].has_dataType=new Object();
+									module.container.fields[index].fields[index_params].has_dataType.ref=ref;
+									
+									index_params++;
+								}); 
+								
+								outputParameterTags =  $("outputParameter", op);
+								$.each(outputParameterTags, function(index_out,operation){
+									var output = $(operation);
+									var idOP = output.attr("id");
+									var nameOP = output.attr("name");
+									
+									module.container.fields[index].fields[index_params]= new Object();
+									
+									module.container.fields[index].fields[index_params].type="outputParameter";
+									module.container.fields[index].fields[index_params].label=nameOP;
+									module.container.fields[index].fields[index_params].name=nameOP;	//idOP;
+									module.container.fields[index].fields[index_params].id=idOP;
+									module.container.fields[index].fields[index_params].wirable=true;
+									
+									var has_dataType = $("has_dataType", outputParameterTags);
+									var ref = $(has_dataType).attr("ref");
+									module.container.fields[index].fields[index_params].has_dataType=new Object();
+									module.container.fields[index].fields[index_params].has_dataType.ref=ref;
+									
+									index_params++;
+								});
+							}
+							
+						
+							var configurationTags = $("configurationParameter",componentTag);
+							$.each(configurationTags,function(index_conf,configuration){
+								module.container.fields[index].fields[index_params] = new Object();
+								
+								module.container.fields[index].fields[index_params].type="configurationParameter";
+								module.container.fields[index].fields[index_params].name=$(configuration).attr("id");
+								module.container.fields[index].fields[index_params].legend=$(configuration).attr("name");
+								module.container.fields[index].fields[index_params].manualInput=$(configuration).attr("manualInput");
+								module.container.fields[index].fields[index_params].collapsible=true;
+								module.container.fields[index].fields[index_params].collapsed=true;
+								
+								module.container.fields[index].fields[index_params].fields=new Array();
+								
+								var has_dataType = $("has_dataType", operationTags);
+								var ref = $(has_dataType).attr("ref");
+								module.container.fields[index].fields[index_params].has_dataType=new Object();
+								module.container.fields[index].fields[index_params].has_dataType.ref=ref;
+								
+								index_params++;
+							});
+							
+							index++;
+							
+						});
+					}
+					
+					module.container.terminals = new Array();
+					
+					var i=0;
+					var klass, term;
+					for(var j=0;j<operationTags.length;j++){
+						
+						if(editorConfiguration.features.control_flow && j==operationTags.length-1){
+					
+							/*terminalOperation input*/
+							if($(operationTags[j]).attr("type") != "notification"){
+							
+								module.container.terminals[i]=new Object();
+								module.container.terminals[i].wireConfig=new Object();
+								module.container.terminals[i].wireConfig.xtype="WireIt.Wire";
+							
+								module.container.terminals[i].wireConfig.allowedTypes=new Array();
+								module.container.terminals[i].wireConfig.allowedTypes[0]="output";
+							
+								module.container.terminals[i].ddConfig=new Object();
+								module.container.terminals[i].ddConfig.type="input";
+								module.container.terminals[i].ddConfig.allowedTypes=new Array();
+								module.container.terminals[i].ddConfig.allowedTypes[0]="output";
+								
+								module.container.terminals[i].direction=new Array();
+								module.container.terminals[i].direction[0]=-1;
+								module.container.terminals[i].direction[1]=0;
+								
+								module.container.terminals[i].fakeDirection=new Array();
+								module.container.terminals[i].fakeDirection[0]=1;
+								module.container.terminals[i].fakeDirection[1]=0;
+								
+								module.container.terminals[i].offsetPosition=new Object();
+								module.container.terminals[i].offsetPosition.left=-15;
+								module.container.terminals[i].offsetPosition.top=15;
+								
+								if(editorConfiguration.features.no_merge){
+									module.container.terminals[i].nMaxWires=1;
+								}
+								
+								module.container.terminals[i].name="input";
+								
+								i++;
+							}
+							
+							/*terminalOperation output*/
+							if($(operationTags[j]).attr("type") != "one-way"){
+							
+								module.container.terminals[i]=new Object();
+								module.container.terminals[i].wireConfig=new Object();
+								module.container.terminals[i].wireConfig.xtype="WireIt.Wire";
+							
+								module.container.terminals[i].wireConfig.allowedTypes=new Array();
+								module.container.terminals[i].wireConfig.allowedTypes[0]="input";
+							
+								module.container.terminals[i].ddConfig=new Object();
+								module.container.terminals[i].ddConfig.type="output";
+								module.container.terminals[i].ddConfig.allowedTypes=new Array();
+								module.container.terminals[i].ddConfig.allowedTypes[0]="input";
+								
+								module.container.terminals[i].direction=new Array();
+								module.container.terminals[i].direction[0]=1;
+								module.container.terminals[i].direction[1]=0;
+								
+								module.container.terminals[i].fakeDirection=new Array();
+								module.container.terminals[i].fakeDirection[0]=1;
+								module.container.terminals[i].fakeDirection[1]=0;
+								
+								module.container.terminals[i].offsetPosition=new Object();
+								module.container.terminals[i].offsetPosition.right=-11;
+								module.container.terminals[i].offsetPosition.top=15;
+								
+								if(editorConfiguration.features.no_branch){
+									module.container.terminals[i].nMaxWires=1;
+								}
+								
+								module.container.terminals[i].name="output";
+								
+								i++;
+							}
+						}
+						
+						if(editorConfiguration.features.data_flow || editorConfiguration.features.blackboard){
+							
+							/*terminalParameter input*/
+							if(inputParameterTags.length>0 ){
+							
+								module.container.terminals[i]=new Object();
+								module.container.terminals[i].ddConfig=new Object();
+								module.container.terminals[i].ddConfig.type="_externalinput";
+								module.container.terminals[i].ddConfig.allowedTypes=new Array();
+								module.container.terminals[i].ddConfig.allowedTypes[0]="_externaloutput";
+								
+								module.container.terminals[i].direction=new Array();
+								module.container.terminals[i].direction[0]=-1;
+								module.container.terminals[i].direction[1]=0;
+								
+								module.container.terminals[i].fakeDirection=new Array();
+								module.container.terminals[i].fakeDirection[0]=1;
+								module.container.terminals[i].fakeDirection[1]=0;
+								
+								module.container.terminals[i].offsetPosition=new Object();
+								module.container.terminals[i].offsetPosition.left=14;
+								module.container.terminals[i].offsetPosition.top=64;
+								
+								module.container.terminals[i].name="_externalInput";
+								
+								i++;
+							}
+							
+							/*terminalParameter output*/
+							if(outputParameterTags.length>0 ){
+								module.container.terminals[i]=new Object();
+								module.container.terminals[i].ddConfig=new Object();
+								module.container.terminals[i].ddConfig.type="_externaloutput";
+								module.container.terminals[i].ddConfig.allowedTypes=new Array();
+								module.container.terminals[i].ddConfig.allowedTypes[0]="_externalinput";
+							
+								module.container.terminals[i].direction=new Array();
+								module.container.terminals[i].direction[0]=1;
+								module.container.terminals[i].direction[1]=0;
+								
+								module.container.terminals[i].fakeDirection=new Array();
+								module.container.terminals[i].fakeDirection[0]=1;
+								module.container.terminals[i].fakeDirection[1]=0;
+								
+								module.container.terminals[i].offsetPosition=new Object();
+								module.container.terminals[i].offsetPosition.right=25;
+								module.container.terminals[i].offsetPosition.top=64;
+								
+								module.container.terminals[i].name="_externalOutput";
+
+								i++;
+							}
+						}		
+					}
+					modulesDef.modules.push(module);
+				}
+				
+				if(editorConfiguration.features.control_flow){
+					modulesDef.modules.push({
+											"name": "Split",
+											"category": "Parallel Flows",
+											"container": {
+												//witch container class to use 
+												"xtype": "Split",
+												"title": "Split",
+												"icon": "./assets/split.png",
+												"image":"./assets/split.png", 
+												"terminals": [
+												{
+													"wireConfig":{
+														"xtype":"WireIt.Wire", 
+														"allowedTypes":["output"]
+													},
+													nMaxWires: 1,
+													ddConfig: {
+														type: "input", 
+														allowedTypes: ["output"]
+													},
+													"direction": [-1,0], 
+													"offsetPosition": {
+														"left": 2, 
+														"top": 16
+													}, 
+													"name": "input"
+												},
+
+												{   
+													
+													"wireConfig":{
+														"xtype":"WireIt.Wire", 
+														"allowedTypes":["input"]
+													},
+													nMaxWires: 10,
+													ddConfig: {
+														type: "output", 
+														allowedTypes: ["input"]
+													},
+													"direction": [1,0], 
+													"offsetPosition": {
+														"right": 2, 
+														"top": 16
+													}, 
+													"name": "output"
+												},  
+									  
+
+												]
+											}
+											},
+											{
+											"name": "Join",
+											"category": "Parallel Flows",
+											"container": {
+												//witch container class to use 
+												"xtype": "Join",
+												"title": "Join",
+												"icon": "./assets/join.png",
+												"image":"./assets/join.png", 
+												"terminals": [
+												{
+													"wireConfig":{
+														"xtype":"WireIt.Wire", 
+														"allowedTypes":["output"]
+													},
+													nMaxWires: 10,
+													ddConfig: {
+														type: "input", 
+														allowedTypes: ["output"]
+													},
+													"direction": [-1,0], 
+													"offsetPosition": {
+														"left": 2, 
+														"top": 16
+													}, 
+													"name": "input"
+												},
+
+												{   
+													
+													"wireConfig":{
+														"xtype":"WireIt.Wire", 
+														"allowedTypes":["input"]
+													},
+													nMaxWires: 1,
+													ddConfig: {
+														type: "output", 
+														allowedTypes: ["input"]
+													},
+													"direction": [1,0], 
+													"offsetPosition": {
+														"right": 2, 
+														"top": 16
+													}, 
+													"name": "output"
+												},  
+									  
+
+												]
+											}
+										});
+					if(editorConfiguration.features.blackboard){
+						modulesDef.modules.push(
+											{
+												"name": "Global Variable",
+												"category": "Global Variables",
+												"container": {
+													//witch container class to use 
+													"xtype": "GlobalVariable",
+													"title": "Global Variable ",
+													"icon": "./assets/global_variable.jpg",
+													"image":"./assets/global_variable.jpg",
+													"fields": [
+														{
+															"type": "string", 
+															"label": "", 
+															"name": "",
+															"value":""
+														},
+
+													],
+													
+													"terminals": [
+													{
+														ddConfig: {
+															type: "inputparameter", 
+															allowedTypes: ["outputparameter"]
+														},
+														direction: [-1,0],
+														"offsetPosition": {
+															"left": 19, 
+															"top": 65
+														}, 
+														"name": "_globalInput"
+													},
+
+													{   
+														ddConfig: {
+															type: "outputparameter", 
+															allowedTypes: ["inputparameter"]
+														},
+														direction: [1,0],
+														"offsetPosition": {
+															"right": 19, 
+															"top": 65
+														}, 
+														"name": "_globalOutput"
+													},  
+													
+													{
+														ddConfig: {
+															type: "_externalinput", 
+															allowedTypes: ["_externaloutput"]
+														},
+														direction: [-1,0],
+														fakeDirection:[0,1],
+														offsetPosition: {
+															"left": 19, 
+															"top": 65
+														}, 
+														name: "_externalInput"
+													},
+
+													{   
+														ddConfig: {
+															type: "_externaloutput", 
+															allowedTypes: ["_externalinput"]
+														},
+														direction: [1,0],
+														fakeDirection:[0,1],
+														offsetPosition: {
+															"right": 19, 
+															"top": 65
+														}, 
+														name: "_externalOutput"
+													},
+													
+													]
+												}
+											});
+					}
+				}
+			}
+		</script>
+		
+		<script type="text/javascript">
+		
+			function getTemplates(){
+				var result;
+				templates = new Array();
+				selectedTemplate = "";
+				
+				$.ajax({
+					url : "http://localhost:1337/DSMFW/templateRegistry",
+					data: {confPackURL: editorConfiguration.confPackURL} ,
+					dataType : 'json',
+					success: function (data,status) {
+							result=data;
+					},
+					async: false
+				});
+				
+				for(var i in result.templates){
+					var html;
+					$.ajax({
+						url : result.templates[i],
+						dataType : 'html',
+						success: function (data,status) {
+								html=data;
+						},
+						async: false
+					});
+					
+					//var parser = new DOMParser()
+					//var htmlDoc = parser.parseFromString(html, "text/xml");
+					
+					var templName = result.templates[i].substring(result.templates[i].lastIndexOf("/")+1, result.templates[i].lastIndexOf("."));
+					
+					templates[templName] = new Object();
+					templates[templName].url = result.templates[i];
+					templates[templName].viewports = new Array();
+					
+					var pos=0;
+					while(html.indexOf("_viewport_",pos)>-1){
+						templates[templName].viewports.push(html.substring(html.indexOf("_viewport_",pos)+10, html.indexOf("\"",html.indexOf("_viewport_",pos)+10)));
+						pos = html.indexOf("\"",html.indexOf("_viewport_",pos)+10)+1;
+					}
+					
+					// var viewportDivs= $("div[id^=_viewport_]", htmlDoc);
+					// $.each(viewportDivs, function(index, vp){
+					//	templates[templName].viewports.push($(vp).attr("id").substring(10, $(vp).attr("id").length-1));
+					// });
+						
+					
+				}
+			}
+		</script>
+			
+
+        <style>
+
+
+            /* Comment Module */
+            div.WireIt-Container.WiringEditor-module-comment { width: 200px; }
+            div.WireIt-Container.WiringEditor-module-comment div.body { background-color: #EEEE66; }
+            div.WireIt-Container.WiringEditor-module-comment div.body textarea { background-color: transparent; font-weight: bold; border: 0; }
+        </style>
+
+
+        <script>
+
+
+            // InputEx needs a correct path to this image
+            inputEx.spacerUrl = "./plugins/inputex/lib/inputex/images/space.png";
+
+
+            YAHOO.util.Event.onDOMReady( function() {
+                try {
+                    //var editor = new WireIt.WiringEditor(demoLanguage); 
+					getConfiguration();
+					createConfiguration();
+					                    
+                    if(editorConfiguration.features.user_interface){
+                    	getTemplates();
+                    	document.getElementById("accordionView").innerHTML +='<li><h2>Page Templates</h2><div><div id="templatesDiv"></div></div></li>';
+
+	                    for(var temp in templates)
+	                    	document.getElementById("templatesDiv").innerHTML +='<div id="templ" style="font-size: smaller; float:left">'+
+																					'<div style="float:left; width: 15px;padding-left: 5px;padding-top: 18px;">'+
+																					'	<input type="'+ (editorConfiguration.features.single_page?"radio":"checkbox") +'" name="selectedTemplate" value="'+temp+'" onclick="selectedTemplate=\''+temp+'\';">'+
+																					'</div>	'+
+																					'<div style="float: left; ">'+
+																					'	<div style="float: left; width: 50px;">'+
+																					'		<a href="'+templates[temp].url+'" target="_blank"><img src="./assets/template.png" style="width: 90%;"></a>'+
+																					'	</div>'+
+																					'	<div style="float: right; ">'+
+																					'		<br><span> Template Name: <b>'+temp+'</b></span>'+
+																					'		<br><span>Viewports: <b>'+templates[temp].viewports.length+'</b></span>'+
+																					'	</div>'+
+																					'</div>'+
+																				'</div>';
+                    }
+                    
+                    
+                    var editor = new WireIt.WiringEditor(modulesDef); 
+                    // Open the infos panel
+                    editor.accordionView.openPanel(1);
+
+                }
+                catch(ex) {
+                    console.log(ex);
+                }
+            });
+
+        </script>
+
+    </head>
+
+    <body class="yui-skin-sam">
+
+        <div id="top">
+            <div class="logo">WiringEditor</div>
+            <div id="toolbar"></div>
+            <div class="copyright">
+                <span>Hello there !</span> 
+                <a href="../..">back to WireIt</a>
+            </div>
+        </div>
+
+
+        <div id="left">
+
+            <ul id="modulesAccordionView">
+
+                <li>
+                    <h2>Components </h2>
+                    <div>
+                        <div id='module-category-Components'></div>
+                    </div>
+                </li>
+
+                
+            </ul>
+
+        </div>
+
+		<div id="right">
+            <ul id="accordionView">
+                <li>
+                    <h2>Minimap</h2>
+                    <div style='position: relative;'>
+                        <div id="layerMap"></div>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+
+        <div id="center">
+            <!-- layer -->
+        </div>
+
+
+        <div id="helpPanel">
+            <div class="hd">Welcome to the WiringEditor demonstration</div>
+            <div class="bd" style="text-align: left;">
+
+                <p>This example shows how to use the <i>ImageContainer</i> and <i>FormContainer</i> in a language definition.</p>
+                <br />
+                <p><b>Drag and drop modules from the Module list</b> on the left to the working layer in the middle.</p>
+                <br />
+                <p><a href="./examples/WiringEditor/demo.js" target="_new">Click here to view the language definition for this editor.</a></p>
+                <br />
+                <p>Close this dialog to test the WiringEditor</p>
+            </div>
+        </div>
+
+    </body>
+</html>
