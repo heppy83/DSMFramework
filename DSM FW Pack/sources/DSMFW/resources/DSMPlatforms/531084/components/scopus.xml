@@ -1,0 +1,13 @@
+<component name="Scopus" type="service" binding="SOAP" endpoint="http://reseval.org/services/scopus" syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/scopus.png">
+		
+		<operation name="Retrieve Publications" type="request-response" reference="getPublications">
+				<inputParameter name="researchers" manualInput="no" optional="no">
+					<has_dataType ref="researchers" />
+				</inputParameter>
+				
+				<outputParameter name="publications" >
+					<has_dataType ref="publications" />
+				</outputParameter>
+		</operation>
+
+</component>

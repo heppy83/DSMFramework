@@ -1,0 +1,10 @@
+<component name="UniTn Venue Rankings" type="data" binding="SOAP" endpoint="http://reseval.org/services/venueRankings" syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/ranking.png">
+		
+		<operation name="Get Weights" type="request-response" reference="getWeights">
+				
+				<outputParameter name="weights" >
+					<has_dataType ref="doubleSet" />
+				</outputParameter>
+		</operation>
+
+</component>

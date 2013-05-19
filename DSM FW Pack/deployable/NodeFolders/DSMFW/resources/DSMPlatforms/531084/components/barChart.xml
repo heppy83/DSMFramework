@@ -1,0 +1,12 @@
+<component name="Bar Chart" type="ui" binding="javascript" reference="barChart" endpoint="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/barChart.js" syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/barChart.png">
+		
+	<operation name="Plot Chart" type="one-way" reference="plot">
+			<inputParameter name="xAxisValues" manualInput="no" optional="no">
+				<has_dataType ref="*" />
+			</inputParameter>
+			<inputParameter name="yAxisValues" manualInput="no" optional="no">
+				<has_dataType ref="impactValues" />
+			</inputParameter>
+	</operation>
+
+</component>

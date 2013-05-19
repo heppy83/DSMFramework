@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mashup name="">
+	
+	<component id="" name="" type="" binding="" endpoint="">
+		<dataType id="" name="">
+			[xsd definition]
+		</dataType>
+	
+		<configurationParameter id="" name="" manualInput="yes">
+			<has_dataType ref="" />
+		</configurationParameter>
+		
+		<operation id="" name="" type="" reference="">
+			<inputParameter id="" name="" manualInput="" optional="">
+				<has_dataType ref="" />
+			</inputParameter>
+		
+			<outputParameter id="" name="" dataType="">
+				<has_dataType ref="" />
+			</outputParameter>
+		</operation>
+
+	</component>
+
+	<userRole id="" name="" />
+
+	<page id="" name="" URL="">
+		<viewport id="" name="" >
+			<displays_component ref="" />
+		</viewport>
+		
+		<belongsTo_userRole ref=""/>
+		<belongsTo_userRole ref=""/>
+	</page>
+
+	<globalVariable id="" name="" defaultValue="">
+		<has_dataType ref="" />
+	</globalVariable>
+
+	<constant id="" name="" value="">
+		<has_dataType ref="" />
+		<feeds_inputParameter ref="" />
+		<feeds_configurationParameter ref="" />
+	</constant>
+
+	<dfConnector id="">
+		<condition language="">expression</condition>
+		<source_outputParameter ref="" /> 
+		<source_globalVariable ref="" />
+		<target_inputParameter ref="" />
+		<target_globalVariable ref="" />
+	</dfConnector>
+
+	<cfConnector id="">
+		<condition language="">expression</condition>
+		<source_operation ref="" /> 
+		<target_operation ref="" />
+	</cfConnector>
+
+	<join id="">
+		<target_operation ref="" />
+		<source_operation ref="" />
+		<source_operation ref="" />
+		<condition language="">expression</condition>
+	</join>
+
+	<split id="">
+		<source_operation ref="" />
+		<targetoperation ref="" />
+		<target_operation ref="" />
+		<condition language="">expression</condition>
+	</split>
+
+</mashup>

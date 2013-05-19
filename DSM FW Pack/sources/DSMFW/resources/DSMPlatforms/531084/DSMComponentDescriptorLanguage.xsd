@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.example.org/CustomMashupPlatform/component" elementFormDefault="qualified" targetNamespace="http://www.example.org/CustomMashupPlatform/component">
+
+	
+	<xs:element name="component" type="tns:componentType">
+		<!-- ================================== Keys definitions ============================================ -->
+		
+		<xs:key name="componentKey">
+			<xs:selector xpath="component"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		
+		<xs:key name="dataTypeKey">
+			<xs:selector xpath="dataType"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		
+		<xs:key name="configurationParameterKey">
+			<xs:selector xpath="component/configurationParameter"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		
+		<xs:key name="operationKey">
+			<xs:selector xpath="component/operation"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		
+		<xs:key name="inputParameterKey">
+			<xs:selector xpath="component/operation/inputParameter"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		
+		<xs:key name="outputParameterKey">
+			<xs:selector xpath="component/operation/outputParameter"/>
+			<xs:field xpath="@id"/>
+		</xs:key>
+		
+		<!-- ================================== References definitions ============================================ -->
+		
+		<xs:keyref name="configurationParameter_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="configurationParameter/has_dataType"/>
+			<xs:field xpath="@ref"/>
+		</xs:keyref>
+		
+		<xs:keyref name="inputParameter_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="component/operation/inputParameter/has_dataType"/>
+			<xs:field xpath="@ref"/>
+		</xs:keyref>
+		
+		<xs:keyref name="outputParameter_dataTypeRef" refer="tns:dataTypeKey">
+			<xs:selector xpath="component/operation/outputParameter/has_dataType"/>
+			<xs:field xpath="@ref"/>
+		</xs:keyref>
+	</xs:element>
+	
+<!-- ================================== Types definitions ============================================ -->
+	
+	<xs:complexType name="componentType">
+
+		<xs:choice maxOccurs="unbounded" minOccurs="1">
+
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="dataType">
+				<xs:complexType mixed="true">
+					<xs:attribute name="id" type="xs:string" use="required"/>
+					<xs:attribute name="name" type="xs:string" use="required"/>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="configurationParameter">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="1" minOccurs="1" name="has_dataType">
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>	
+			
+					<xs:attribute name="id" type="xs:string" use="required"/>
+					<xs:attribute name="name" type="xs:string" use="required"/>
+					<xs:attribute fixed="yes" name="manualInput" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="operation" type="tns:operationType"/>
+
+		</xs:choice>
+
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		
+		<xs:attribute name="endpoint" type="xs:string" use="required"/>
+
+		<xs:attribute name="binding" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+			      
+			      
+			      <xs:enumeration value="rest"/>
+			      <xs:enumeration value="soap"/>
+			      <xs:enumeration value="javascript"/>
+			      
+			    </xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+			      <xs:enumeration value="data"/>
+			      <xs:enumeration value="service"/>
+			      <xs:enumeration value="ui"/>
+			    </xs:restriction>
+		    </xs:simpleType>
+		</xs:attribute>
+
+	</xs:complexType>
+
+
+	<xs:complexType name="operationType">
+		<xs:sequence>
+			
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="inputParameter">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="1" minOccurs="1" name="has_dataType">
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					
+					<xs:attribute name="id" type="xs:string" use="required"/>
+					<xs:attribute name="name" type="xs:string" use="required"/>
+
+					<xs:attribute default="no" name="optional" use="optional">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:pattern value="yes|no"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+
+					<xs:attribute name="manualInput" use="optional">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:pattern value="yes|no"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>	
+
+				</xs:complexType>
+			</xs:element>
+
+			<xs:element maxOccurs="unbounded" minOccurs="0" name="outputParameter">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element maxOccurs="1" minOccurs="1" name="has_dataType">
+							<xs:complexType>
+								<xs:attribute name="ref" type="xs:string" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					
+					<xs:attribute name="id" type="xs:string" use="required"/>
+					<xs:attribute name="name" type="xs:string" use="required"/>
+				</xs:complexType>
+			</xs:element>
+
+		</xs:sequence>
+
+		<xs:attribute name="id" type="xs:string" use="required"/>
+		
+		<xs:attribute name="name" type="xs:string" use="required"/>
+		
+		<xs:attribute name="reference" type="xs:string" use="required"/>
+
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="request-response"/>
+				    
+				    <xs:enumeration value="one-way"/>
+				    <xs:enumeration value="notification"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	
+</xs:schema>

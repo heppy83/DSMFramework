@@ -1,0 +1,13 @@
+<component name="H-Index" type="service" binding="SOAP" endpoint="http://reseval.org/services/hindex"  syntax="http://localhost:1337/DSMFW/resources/DSMPlatforms/531084/components/hIndex.png">
+		
+		<operation name="Compute H-Index" type="request-response" reference="getHIndex">
+				<inputParameter name="publicationSet" manualInput="no" optional="no">
+					<has_dataType ref="publications" />
+				</inputParameter>
+				
+				<outputParameter name="hIndexValues" >
+					<has_dataType ref="impactValues" />
+				</outputParameter>
+		</operation>
+
+</component>

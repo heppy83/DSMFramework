@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<component id="" name="" type="" binding="" endpoint="">
+		<dataType id="" name="">
+			[xsd definition]
+		</dataType>
+	
+		<configurationParamenter id="" name="" manualInput="yes">
+			<has_dataType ref="" />
+		</configurationParamenter>
+
+		<operation id="" name="" type="" reference="">
+				<inputParameter id="" name="" manualInput="" optional="">
+					<has_dataType ref="" />
+				</inputParameter>
+			
+				<outputParameter id="" name="" dataType="">
+					<has_dataType ref="" />
+				</outputParameter>
+		</operation>
+
+</component>
+
+
